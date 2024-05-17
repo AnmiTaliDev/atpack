@@ -105,8 +105,6 @@ atpm remove example_1.0
 
 ## Вклад
 
-Мы приветствуем вклад сообщества! Пожалуйста, открывайте issues и pull requests на [GitHub](https://github.com/yourusername/atpack-sdk).
+Мы приветствуем вклад сообщества! Пожалуйста, открывайте issues и pull requests на [GitHub](https://github.com/AnmiTaliDev/atpack).
 
-```
 
-Замените `https://github.com/yourusername/atpack-sdk` на URL репозитория вашего проекта, если он доступен в интернете. Этот README файл предоставляет базовую информацию о том, как установить, использовать и внести вклад в проект ATPack SDK и ATPM.
