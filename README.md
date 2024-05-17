@@ -19,13 +19,14 @@ ATPack SDK предоставляет скрипт для создания па�
 1. Клонируйте репозиторий:
 
 ```sh
-git clone https://github.com/yourusername/atpack-sdk.git
-cd atpack-sdk
+git clone https://github.com/AnmiTaliDev/atpack.git
+cd atpack
 ```
 
 2. Запустите скрипт для создания пакета:
 
 ```sh
+cd sdk/
 python3 create_package.py
 ```
 
