@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+import sys
+import os
+import json
+import subprocess
+import shutil
+
+def extract_atpnr(package_file):
+    # Разархивировать пакет .atpnr
+    subprocess.run(["ar", "x", package_file])
+
+def read_manifest(package_name, version):
+    # Прочитать файл manifest.json
+    with open(f"{package_name}-{version}/ATPack/manifest.json") as f:
+        manifest = json.load(f)
+    return manifest
+
+def install_files(files, package_name, version):
+    # Установить файлы из пакета
+    for file_info in files:
+        source = f"{package_name}-{version}/{file_info['source']}"
+        destination = file_info['destination']
+        shutil.copy(source, destination)
+
+def run_scripts(scripts, package_name, version):
+    # Запустить скрипты установки
+    for script_name, script_content in scripts.items():
+        script_path = f"{package_name}-{version}/ATPack/{script_name}"
+        if os.path.exists(script_path):
+            subprocess.run(["bash", script_path])
+
+def install_dependencies(dependencies_script):
+    # Запустить скрипт для установки зависимостей
+    if os.path.exists(dependencies_script):
+        subprocess.run(["bash", dependencies_script])
+
+def install_package(package_file):
+    # Извлечь пакет .atpnr
+    extract_atpnr(package_file)
+    
+    # Прочитать манифест
+    package_name, version = os.path.splitext(package_file)[0].split("_")
+    manifest = read_manifest(package_name, version)
+    
+    # Установить файлы
+    install_files(manifest['files'], package_name, version)
+    
+    # Запустить скрипты установки
+    run_scripts(manifest['scripts'], package_name, version)
+    
+    # Установить зависимости
+    install_dependencies(manifest['dependencies_script'])
+    print(f"Пакет {package_name} успешно установлен.")
+
+def remove_package(package_name, version):
+    # Удалить директорию пакета
+    shutil.rmtree(f"{package_name}-{version}", ignore_errors=True)
+    print(f"Пакет {package_name} успешно удален.")
+
+def main():
+    if len(sys.argv) < 2:
+        print("Использование: atpm <install/remove> <package>")
+        sys.exit(1)
+
+    command = sys.argv[1]
+    if command == "install":
+        package_file = sys.argv[2]
+        install_package(package_file)
+    elif command == "remove":
+        package_name, version = os.path.splitext(sys.argv[2])[0].split("_")
+        remove_package(package_name, version)
+    else:
+        print(f"Неизвестная команда: {command}")
+
+if __name__ == "__main__":
+    main()
