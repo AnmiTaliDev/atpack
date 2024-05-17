@@ -2,8 +2,9 @@ import os
 import json
 import subprocess
 import shutil
+import zipfile
 
-def create_package(package_name, version, description, maintainer, files, scripts, code_archive, dependencies_script):
+def create_package(package_name, version, description, maintainer, files, scripts, code_archive, dependencies_script, is_console_app):
     # Создание директории пакета
     package_dir = f"{package_name}-{version}"
     os.makedirs(package_dir, exist_ok=True)
@@ -20,8 +21,7 @@ def create_package(package_name, version, description, maintainer, files, script
         "maintainer": maintainer,
         "files": files,
         "scripts": scripts,
-        "code_archive": code_archive,
-        "dependencies_script": dependencies_script
+        "is_console_app": is_console_app
     }
     with open(os.path.join(atpack_dir, "manifest.json"), "w") as manifest_file:
         json.dump(manifest_data, manifest_file, indent=4)
@@ -32,12 +32,23 @@ def create_package(package_name, version, description, maintainer, files, script
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
         shutil.copy(source, destination_path)
     
-    # Копирование архива с кодом
-    shutil.copy(code_archive, os.path.join(package_dir, os.path.basename(code_archive)))
-    
-    # Копирование скрипта для установки зависимостей
-    if dependencies_script:
-        shutil.copy(dependencies_script, os.path.join(package_dir, os.path.basename(dependencies_script)))
+    # Распаковка архива с кодом
+    with zipfile.ZipFile(code_archive, 'r') as zip_ref:
+        zip_ref.extractall(package_dir)
+
+    # Создание файла .desktop для графических приложений
+    if not is_console_app:
+        desktop_entry = f"""[Desktop Entry]
+Type=Application
+Name={package_name}
+Comment={description}
+Exec=/usr/bin/{package_name}
+Icon=
+Terminal=false
+"""
+        desktop_file_path = os.path.join(atpack_dir, f"{package_name}.desktop")
+        with open(desktop_file_path, "w") as desktop_file:
+            desktop_file.write(desktop_entry)
     
     # Упаковка в .ar
     subprocess.run(["ar", "rc", f"{package_name}_{version}.ar", package_dir])
@@ -66,5 +77,7 @@ for script_name in ["preinstall", "postinstall", "preremove", "postremove"]:
 code_archive = input("Введите путь к архиву с кодом (.zip): ")
 dependencies_script = input("Введите путь к файлу с командами для установки зависимостей (.sh): ")
 
-create_package(package_name, version, description, maintainer, files, scripts, code_archive, dependencies_script)
+is_console_app = input("Является ли приложение консольным? (yes/no): ").strip().lower() == 'yes'
+
+create_package(package_name, version, description, maintainer, files, scripts, code_archive, dependencies_script, is_console_app)
 print("Пакет успешно создан.")
